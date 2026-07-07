@@ -1,7 +1,7 @@
 """Конфигурация бота, читается из переменных окружения / .env файла."""
 from __future__ import annotations
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     bybit_api_key: str = Field(..., alias="BYBIT_API_KEY")
     bybit_api_secret: str = Field(..., alias="BYBIT_API_SECRET")
     bybit_testnet: bool = Field(False, alias="BYBIT_TESTNET")
+    # Demo Trading — паралелльный "бумажный" аккаунт на mainnet с реальными
+    # котировками, но виртуальным балансом. Нужны отдельные API-ключи,
+    # выпущенные в разделе Demo Trading личного кабинета Bybit.
+    bybit_demo: bool = Field(False, alias="BYBIT_DEMO")
 
     # Trading params
     order_size_usdt: float = Field(50.0, alias="ORDER_SIZE_USDT")
@@ -42,6 +46,12 @@ class Settings(BaseSettings):
         if v not in (5, 15):
             raise ValueError("STOP_TIMEFRAME должен быть 5 или 15")
         return v
+
+    @model_validator(mode="after")
+    def _validate_bybit_mode(self) -> "Settings":
+        if self.bybit_testnet and self.bybit_demo:
+            raise ValueError("BYBIT_TESTNET и BYBIT_DEMO нельзя включать одновременно")
+        return self
 
 
 def load_settings() -> Settings:

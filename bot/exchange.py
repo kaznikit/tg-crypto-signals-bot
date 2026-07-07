@@ -38,8 +38,16 @@ class OrderPlan:
 
 
 class BybitExchange:
-    def __init__(self, api_key: str, api_secret: str, testnet: bool = False) -> None:
-        self.session = HTTP(api_key=api_key, api_secret=api_secret, testnet=testnet)
+    def __init__(
+        self,
+        api_key: str,
+        api_secret: str,
+        testnet: bool = False,
+        demo: bool = False,
+    ) -> None:
+        self.session = HTTP(
+            api_key=api_key, api_secret=api_secret, testnet=testnet, demo=demo
+        )
         self._instrument_cache: dict[str, InstrumentInfo] = {}
 
     def get_instrument_info(self, symbol: str) -> InstrumentInfo:

@@ -113,6 +113,7 @@ async def _async_main() -> None:
         api_key=settings.bybit_api_key,
         api_secret=settings.bybit_api_secret,
         testnet=settings.bybit_testnet,
+        demo=settings.bybit_demo,
     )
 
     notifier = TelegramBotNotifier(
@@ -133,9 +134,10 @@ async def _async_main() -> None:
     await listener.start()
     listener.register_handler(handler)
 
+    bybit_mode = "TESTNET" if settings.bybit_testnet else "DEMO" if settings.bybit_demo else "LIVE"
     logger.info(
-        "Бот запущен. DRY_RUN=%s, ORDER_SIZE_USDT=%s, LEVERAGE=%s, RR=1:%s, STOP_TIMEFRAME=%sm",
-        settings.dry_run, settings.order_size_usdt, settings.leverage,
+        "Бот запущен. BYBIT_MODE=%s, DRY_RUN=%s, ORDER_SIZE_USDT=%s, LEVERAGE=%s, RR=1:%s, STOP_TIMEFRAME=%sm",
+        bybit_mode, settings.dry_run, settings.order_size_usdt, settings.leverage,
         settings.risk_reward, settings.stop_timeframe,
     )
     await notifier.send("🤖 Бот сигналов запущен и слушает канал")
