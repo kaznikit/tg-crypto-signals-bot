@@ -31,11 +31,53 @@ class SignalListener:
         self._source_chat_ref = _resolve_chat(source_chat)
         self._entity = None
 
+    async def _resolve_entity(self):
+        """Пытается найти чат по username/ID. Если TG_SOURCE_CHAT оказался
+        просто отображаемым названием канала (например, скопированным из
+        шапки чата) — ищет точное совпадение по названию среди диалогов,
+        в которых уже состоит аккаунт."""
+        try:
+            return await self.client.get_entity(self._source_chat_ref)
+        except (ValueError, TypeError) as exc:
+            if isinstance(self._source_chat_ref, int):
+                raise
+
+            title = str(self._source_chat_ref).strip()
+            matches = []
+            async for dialog in self.client.iter_dialogs():
+                if dialog.name and dialog.name.strip() == title:
+                    matches.append(dialog)
+
+            if len(matches) == 1:
+                dialog = matches[0]
+                logger.warning(
+                    "TG_SOURCE_CHAT=%r похоже на название чата, а не username/ID. "
+                    "Нашёл по названию среди ваших диалогов (id=%s). Рекомендуется "
+                    "указать в .env числовой ID (запустите `python -m bot.list_chats`), "
+                    "т.к. название канала может измениться.",
+                    title, dialog.id,
+                )
+                return dialog.entity
+
+            if len(matches) > 1:
+                raise ValueError(
+                    f"Найдено {len(matches)} чатов с названием {title!r} — уточните "
+                    "TG_SOURCE_CHAT числовым ID. Запустите `python -m bot.list_chats`, "
+                    "чтобы посмотреть ID всех ваших чатов."
+                ) from exc
+
+            raise ValueError(
+                f"Не удалось найти чат {title!r} ни как username/ID, ни по точному "
+                "названию среди ваших диалогов. Проверьте значение TG_SOURCE_CHAT: "
+                "укажите @username канала (без @) или его числовой ID. Чтобы посмотреть "
+                "список всех ваших чатов с ID, запустите `python -m bot.list_chats`."
+            ) from exc
+
     async def start(self) -> None:
         """Подключается и авторизуется. При первом запуске без сохранённой
         сессии Telethon запросит номер телефона и код подтверждения в консоли."""
         await self.client.start()
-        self._entity = await self.client.get_entity(self._source_chat_ref)
+        self._entity = await self._resolve_entity()
         me = await self.client.get_me()
         logger.info(
             "Telegram-клиент запущен как %s, слушаю канал %r",
