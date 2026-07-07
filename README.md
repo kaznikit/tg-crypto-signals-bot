@@ -248,6 +248,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now tg-crypto-signals-bot
 ```
 
+Обновление до последней версии из GitHub:
+
+```bash
+cd /opt/tg-crypto-signals-bot
+git pull
+.venv/bin/pip install -r requirements.txt
+sudo systemctl restart tg-crypto-signals-bot
+```
+
 ## Логика расчёта сделки
 
 1. Парсится сообщение: символ (например, `GRAMUSDT`, `MNTUSDT` — любой актив) и паттерн (`Двойная вершина` / `Двойное дно`). Остальные паттерны игнорируются.
