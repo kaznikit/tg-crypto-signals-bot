@@ -1,0 +1,15 @@
+services:
+  bot:
+    build: .
+    container_name: tg-crypto-signals-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./session:/app/session
+    # stdin_open/tty нужны для первого интерактивного входа в Telegram:
+    #   docker compose run --rm bot
+    # После того как файл сессии создан в ./session, можно запускать в фоне:
+    #   docker compose up -d
+    stdin_open: true
+    tty: true
