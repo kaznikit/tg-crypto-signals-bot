@@ -153,6 +153,8 @@ DRY_RUN=false
 
 `BYBIT_TESTNET` и `BYBIT_DEMO` взаимоисключающие — бот сам откажется стартовать, если включены оба.
 
+Если при `BYBIT_DEMO=true` бот падает с `pybit.exceptions.InvalidRequestError: API key is invalid. (ErrCode: 10003)` на запросах к `api-demo.bybit.com` — значит в `BYBIT_API_KEY`/`BYBIT_API_SECRET` попал обычный ключ с mainnet или testnet, а не ключ, выпущенный именно внутри раздела Demo Trading. Это разные, несовместимые между собой пары ключей — перевыпустите ключ, находясь в режиме Demo Trading (шаг 2 выше).
+
 Когда всё проверено на Demo Trading и результаты устраивают — просто замените ключи на боевые и выставьте `BYBIT_DEMO=false` (при этом `BYBIT_TESTNET` тоже должен остаться `false`).
 
 ## 3. Запуск локально (без Docker)

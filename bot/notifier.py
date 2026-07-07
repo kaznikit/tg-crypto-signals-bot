@@ -35,5 +35,9 @@ class TelegramBotNotifier:
             data = resp.json()
             if not data.get("ok"):
                 logger.error("Telegram Bot API вернул ошибку при отправке уведомления: %s", data)
-        except Exception:
-            logger.exception("Не удалось отправить уведомление в Telegram-канал")
+        except Exception as exc:
+            logger.error("Не удалось отправить уведомление в Telegram-канал: %s", self._redact(exc))
+
+    def _redact(self, exc: Exception) -> str:
+        """Убирает URL (с зашитым токеном бота) из текста ошибки перед логированием."""
+        return str(exc).replace(self._url, "https://api.telegram.org/bot<redacted>/sendMessage")

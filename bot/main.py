@@ -23,6 +23,11 @@ def _setup_logging(level: str) -> None:
         level=level,
         format="%(asctime)s %(levelname)-8s %(name)s: %(message)s",
     )
+    # httpx на уровне INFO логирует полный URL запроса, а в нём для Bot API
+    # зашит секретный токен (https://api.telegram.org/bot<TOKEN>/...). Поднимаем
+    # уровень, чтобы токен не утекал в логи контейнера.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 async def process_message(
