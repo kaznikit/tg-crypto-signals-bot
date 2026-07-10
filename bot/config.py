@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     swing_window: int = Field(2, alias="SWING_WINDOW")
     stop_lookback_candles: int = Field(200, alias="STOP_LOOKBACK_CANDLES")
     max_signal_age_seconds: int = Field(120, alias="MAX_SIGNAL_AGE_SECONDS")
+    # Сколько закрытых свечей STOP_TIMEFRAME подождать после сигнала перед входом
+    # (часто после сигнала сначала идёт откат, и вход после паузы даёт цену лучше).
+    # 0 - входить сразу же, без ожидания.
+    entry_delay_candles: int = Field(0, alias="ENTRY_DELAY_CANDLES")
 
     dry_run: bool = Field(False, alias="DRY_RUN")
     log_level: str = Field("INFO", alias="LOG_LEVEL")
@@ -45,6 +49,13 @@ class Settings(BaseSettings):
     def _validate_timeframe(cls, v: int) -> int:
         if v not in (5, 15):
             raise ValueError("STOP_TIMEFRAME должен быть 5 или 15")
+        return v
+
+    @field_validator("entry_delay_candles")
+    @classmethod
+    def _validate_entry_delay(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("ENTRY_DELAY_CANDLES не может быть отрицательным")
         return v
 
     @model_validator(mode="after")

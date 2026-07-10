@@ -53,6 +53,20 @@ async def process_message(
 
     logger.info("Сигнал: %s %s (%s)", signal.symbol, signal.direction.value, signal.pattern)
 
+    if settings.entry_delay_candles > 0:
+        delay_seconds = settings.entry_delay_candles * settings.stop_timeframe * 60
+        logger.info(
+            "Жду %s свечей (%sm) = %sс перед входом по %s",
+            settings.entry_delay_candles, settings.stop_timeframe, delay_seconds, signal.symbol,
+        )
+        await notifier.send(
+            f"⏳ Сигнал {signal.symbol} {signal.direction.value} (паттерн: {signal.pattern}) — "
+            f"жду {settings.entry_delay_candles} свечей ({settings.stop_timeframe}m) перед входом, "
+            "на случай отката."
+        )
+        await asyncio.sleep(delay_seconds)
+        logger.info("Ожидание окончено, продолжаю обработку сигнала %s", signal.symbol)
+
     try:
         if exchange.has_open_position(signal.symbol):
             msg = f"⚠️ Пропущен сигнал {signal.symbol}: уже есть открытая позиция"
@@ -141,9 +155,10 @@ async def _async_main() -> None:
 
     bybit_mode = "TESTNET" if settings.bybit_testnet else "DEMO" if settings.bybit_demo else "LIVE"
     logger.info(
-        "Бот запущен. BYBIT_MODE=%s, DRY_RUN=%s, ORDER_SIZE_USDT=%s, LEVERAGE=%s, RR=1:%s, STOP_TIMEFRAME=%sm",
+        "Бот запущен. BYBIT_MODE=%s, DRY_RUN=%s, ORDER_SIZE_USDT=%s, LEVERAGE=%s, RR=1:%s, "
+        "STOP_TIMEFRAME=%sm, ENTRY_DELAY_CANDLES=%s",
         bybit_mode, settings.dry_run, settings.order_size_usdt, settings.leverage,
-        settings.risk_reward, settings.stop_timeframe,
+        settings.risk_reward, settings.stop_timeframe, settings.entry_delay_candles,
     )
     await notifier.send("🤖 Бот сигналов запущен и слушает канал")
     await listener.run_until_disconnected()
